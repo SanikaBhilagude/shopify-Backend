@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const morgan = require('morgan');
+const {Product} = require('./model/Product');
 
 
 
@@ -94,6 +95,49 @@ app.post('/login', async(req,res)=>{
             email:user.email,
             token:user.token,
             role:user.role
+        })
+
+    }catch(error){
+        console.log(error);
+        res.status(500).json({message:'Internal server error'})
+    }
+})
+
+// task-3 create a route to see all products
+app.get('/products', async(req,res)=>{
+    try{
+        const products = await Product.find({});
+        return res.status(200).json({
+            message:"Find all products",
+            products:products
+        })
+    }catch(error){
+        console.log(error);
+        res.status(500).json({message:'Internal server error'})
+    }
+})
+
+// task-4 create a route to add product
+app.post('/add-product',async(req,res)=>{
+    try{
+        const {name,price,image,brand,stock,description} = req.body;
+        const {token} = req.headers;
+
+        const decodedToken = jwt.verify(token,'supersecret');
+        const user= await User.findOne({email:decodedToken.email});
+
+        await Product.create({
+            name,
+            price,
+            description,
+            image,
+            stock,
+            brand,
+            user:user._id
+
+        })
+        return res.status(201).json({
+            message:'Product added successfully',
         })
 
     }catch(error){
